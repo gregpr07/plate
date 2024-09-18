@@ -6,6 +6,7 @@ import {
   getStartPoint,
   select,
   withoutNormalizing,
+  findNode,
 } from '@udecode/plate-common';
 import { Path } from 'slate';
 
@@ -14,8 +15,9 @@ import {
   type TableConfig,
   getColSpan,
   getRowSpan,
+  TTableElement,
 } from '../lib';
-import { TableCellHeaderPlugin } from './TablePlugin';
+import { TableCellHeaderPlugin, TablePlugin } from './TablePlugin';
 import { getTableGridAbove } from './queries';
 
 export const withSetFragmentDataTable: ExtendEditor<TableConfig> = ({
@@ -124,6 +126,22 @@ export const withSetFragmentDataTable: ExtendEditor<TableConfig> = ({
         textCsv += `${cellStrings.join(',')}\n`;
         textTsv += `${cellStrings.join('\t')}\n`;
       });
+
+      const _tableEntry = findNode<TTableElement>(editor, {
+        at: tablePath,
+        match: { type: TablePlugin.key },
+      });
+
+      if (_tableEntry != null && _tableEntry.length > 0) {
+        const realTable = _tableEntry[0];
+        if (realTable.attributes != null) {
+          Object.entries(realTable.attributes).forEach(([key, value]) => {
+            if (value != null) {
+              tableElement.setAttribute(key, value);
+            }
+          });
+        }
+      }
 
       // select back original cells
       select(editor, initialSelection!);
